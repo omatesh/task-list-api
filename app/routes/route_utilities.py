@@ -1,5 +1,7 @@
 from flask import abort, make_response
+import requests
 from ..db import db
+import os
 
 def validate_model(cls, model_id):
     try:
@@ -31,16 +33,15 @@ def create_model(cls, model_data):
     db.session.add(new_model)
     db.session.commit()
 
-    return {"task" : new_model.to_dict()}, 201
+    return new_model.to_dict(), 201
 
-def get_models_with_filters(cls, filters=None):
-    query = db.select(cls)
-    
-    if filters:
-        for attribute, value in filters.items():
-            if hasattr(cls, attribute):
-                query = query.where(getattr(cls, attribute).ilike(f"%{value}%"))
-
-    models = db.session.scalars(query.order_by(cls.id))
-    models_response = [model.to_dict() for model in models]
-    return models_response
+def send_slack_message(task_title):
+    slack_token = os.environ.get("SLACK_TOKEN")  # Get token from environment variables
+    slack_url = "https://slack.com/api/chat.postMessage"
+    headers = {"Authorization": f"Bearer {slack_token}"}
+    slack_channel = os.environ.get("SLACK_CHANNEL")  
+    data = {
+        "channel": slack_channel,  # Channel name in Slack
+        "text": f"Someone just completed the task {task_title}"  # Message text
+    }
+    requests.post(slack_url, headers=headers, json=data)

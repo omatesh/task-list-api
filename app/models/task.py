@@ -20,18 +20,17 @@ class Task(db.Model):
         task_as_dict["title"] = self.title
         task_as_dict["description"] = self.description
         # task_as_dict["completed_at"] = self.completed_at
-        task_as_dict["is_complete"] = False
-
+        task_as_dict["is_complete"] = False if not self.completed_at else True
 
         return task_as_dict
     
+
     @classmethod
     def from_dict(cls, task_data):
-        new_task = Task(title=task_data["title"],
-                        description=task_data["description"],
-                        completed_at=task_data.get("completed_at"))
+        new_task = Task(
+            title=task_data["title"],
+            description=task_data["description"],
+            completed_at=task_data.get("completed_at")
+        )
         return new_task
     
-    # @property
-    # def is_complete(self) -> bool:
-    # return self.completed_at is not None
