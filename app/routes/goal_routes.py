@@ -1,11 +1,11 @@
-from flask import Blueprint, request, Response
+from flask import Blueprint, request, Response, make_response, abort
 from ..db import db
 
 from app.models.goal import Goal
+from app.models.task import Task
 from .route_utilities import validate_model, create_model
 
 
-#declare a Blueprint named bp that groups the endpoints for our Author model
 bp = Blueprint("bp_goal", __name__, url_prefix="/goals")
 
 @bp.post("")
@@ -13,6 +13,35 @@ def create_goal():
     request_body = request.get_json()
     response_body, status_code = create_model(Goal, request_body)
     return {"goal": response_body}, status_code
+
+@bp.post("/<goal_id>/tasks")
+def assign_tasks_to_goal(goal_id):
+
+    goal = validate_model(Goal, goal_id)
+
+    request_body = request.get_json()
+    task_ids_list = request_body.get("task_ids")
+
+    if not task_ids_list or not isinstance(task_ids_list, list):
+        response = {"message": f"Invalid request"}
+        abort(make_response(response, 400))
+
+    valid_tasks = [] # a list of Task objects
+    for task in task_ids_list:
+        task = validate_model(Task, task)
+        task.goal = goal
+        valid_tasks.append(task) 
+    
+    db.session.commit()
+
+    response = {
+        "id": goal.id,
+        "task_ids" : [task.id for task in valid_tasks]
+    }
+
+    return make_response(response, 200)
+
+
 
 @bp.get("")
 def get_all_goals():
@@ -23,6 +52,27 @@ def get_all_goals():
     goals = db.session.scalars(query)
     goals_response = [goal.to_dict() for goal in goals]
     return goals_response
+
+
+
+@bp.get("/<goal_id>/tasks")
+def get_all_goal_tasks(goal_id):
+    goal = validate_model(Goal, goal_id)
+
+    query = db.select(Task).where(Task.goal_id == goal.id).order_by(Task.id)
+
+    goal_tasks = db.session.scalars(query)
+
+    goal_tasks = [task.to_dict() for task in goal_tasks]
+    response = {
+        "id": goal.id,
+        "title": goal.title,
+        "tasks": goal_tasks
+    }
+
+    return make_response(response, 200)
+
+
 
 @bp.get("/<goal_id>")
 def get_one_goal_by_id(goal_id):

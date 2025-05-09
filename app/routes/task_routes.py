@@ -13,9 +13,6 @@ def create_task_from_dict():
     response_body, status_code = create_model(Task, request_body)
     return {"task" : response_body}, status_code
 
-# @bp.get("")
-# def get_all_tasks():
-#     return get_models_with_filters(Task, request.args)
 
 @bp.get("")
 def get_all_tasks():
