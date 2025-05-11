@@ -26,8 +26,7 @@ def get_all_tasks():
             query = query.order_by(Task.title.asc())
         elif sort_param.lower() == "desc":
             query = query.order_by(Task.title.desc())
-        # else:
-        #     query = query.order_by(Task.id)
+
     else:
         query = query.order_by(Task.id)  # default sort if no sort param given
 
@@ -57,14 +56,18 @@ def update_task(task_id):
 
 @bp.patch("/<task_id>/mark_complete")
 def mark_task_complete(task_id):
-    task = validate_model(Task, task_id)
+
+    task = validate_model(Task, task_id) 
  
     task.completed_at = datetime.now(timezone.utc)
     db.session.commit()
 
-    send_slack_message(task.title)
-
-    return Response(status=204, mimetype="application/json")
+    slack_response = send_slack_message(task.title)
+    if slack_response:
+        return Response(status=204, mimetype="application/json")
+    else:
+        response = {"message": "Slack Message was not sent"}
+        return make_response(response, 200)
 
 @bp.patch("/<task_id>/mark_incomplete")
 def mark_task_incomplete(task_id):

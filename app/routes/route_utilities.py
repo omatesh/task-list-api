@@ -44,4 +44,6 @@ def send_slack_message(task_title):
         "channel": slack_channel,  # Channel name in Slack
         "text": f"Someone just completed the task {task_title}"  # Message text
     }
-    requests.post(slack_url, headers=headers, json=data)
+
+    response = requests.post(slack_url, headers=headers, json=data)
+    return response.json()["ok"]
