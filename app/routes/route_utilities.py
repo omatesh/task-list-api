@@ -7,7 +7,6 @@ def validate_model(cls, model_id):
     try:
         model_id = int(model_id)
     except:
-        # response = {"message": f"{cls.__name__} {model_id} invalid"}
         response = {"details": "Invalid data"}
         abort(make_response(response , 400))
 
