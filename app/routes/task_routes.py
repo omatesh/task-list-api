@@ -63,11 +63,12 @@ def mark_task_complete(task_id):
     db.session.commit()
 
     slack_response = send_slack_message(task.title)
-    if slack_response:
-        return Response(status=204, mimetype="application/json")
-    else:
+    if not slack_response:
         response = {"message": "Slack Message was not sent"}
-        return make_response(response, 200)
+        return response, 200
+        
+    return Response(status=204, mimetype="application/json")
+ 
 
 @bp.patch("/<task_id>/mark_incomplete")
 def mark_task_incomplete(task_id):
