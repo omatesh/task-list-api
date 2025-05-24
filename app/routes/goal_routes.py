@@ -59,10 +59,7 @@ def get_all_goals():
 def get_all_goal_tasks(goal_id):
     goal = validate_model(Goal, goal_id)
 
-    query = db.select(Task).where(Task.goal_id == goal.id).order_by(Task.id)
-
-    goal_tasks = db.session.scalars(query)
-
+    goal_tasks = goal.tasks
     goal_tasks = [task.to_dict() for task in goal_tasks]
     response = {
         "id": goal.id,
